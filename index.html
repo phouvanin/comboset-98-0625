@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<title>ໂປຣ ເຊັດເຝີເຮືອ 98,000ກີບ — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --cream:#FBF3E7;
+    --broth:#7A2E1D;
+    --chili:#C0392B;
+    --chili-deep:#962D20;
+    --chili-light:#F2C4B5;
+    --herb:#5E7A3D;
+    --line:#EAD9C6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    font-family:'Noto Sans Lao','Segoe UI',sans-serif;
+    color:var(--broth);
+    padding:28px 18px 60px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+  header{
+    display:flex;align-items:center;gap:18px;
+    border-bottom:3px solid var(--chili);
+    padding-bottom:18px;margin-bottom:26px;
+  }
+  .bowl-icon{
+    width:54px;height:54px;border-radius:50% 50% 46% 46%;
+    background:radial-gradient(circle at 35% 30%, var(--chili-light), var(--chili) 65%, var(--chili-deep));
+    flex-shrink:0;
+    box-shadow:0 3px 8px rgba(150,45,32,0.35);
+  }
+  h1{font-size:1.5rem;font-weight:800;letter-spacing:.2px;}
+  .sub{color:var(--chili-deep);font-size:.92rem;margin-top:3px;}
+  .badge{
+    margin-left:auto;background:var(--chili-deep);color:#fff;
+    font-size:.78rem;padding:6px 14px;border-radius:20px;font-weight:600;
+  }
+
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px;}
+  @media (max-width:760px){.cards{grid-template-columns:repeat(2,1fr);}}
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:18px 18px 16px;position:relative;overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;top:0;left:0;width:5px;height:100%;
+    background:var(--chili);
+  }
+  .card .label{font-size:.78rem;color:var(--chili-deep);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  .card .value{font-size:1.7rem;font-weight:800;margin-top:6px;color:var(--broth);}
+  .card .note{font-size:.78rem;color:#9c7257;margin-top:4px;}
+
+  .panel{
+    background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:22px;margin-bottom:24px;
+  }
+  .panel h2{font-size:1.05rem;font-weight:700;margin-bottom:14px;color:var(--broth);}
+  .chart-box{height:300px;}
+
+  table{width:100%;border-collapse:collapse;font-size:.88rem;}
+  th{
+    text-align:left;color:var(--chili-deep);font-weight:700;
+    border-bottom:2px solid var(--line);padding:9px 8px;
+    font-size:.78rem;text-transform:uppercase;letter-spacing:.3px;
+  }
+  td{padding:9px 8px;border-bottom:1px solid var(--line);}
+  tr:hover td{background:#FFF6EF;}
+  .zero{color:#cbab95;}
+  .pill{
+    display:inline-block;padding:2px 9px;border-radius:10px;
+    background:var(--chili-light);color:var(--broth);font-weight:700;font-size:.78rem;
+  }
+  .spike{color:var(--chili-deep);font-weight:700;}
+  footer{text-align:center;color:#b58e72;font-size:.78rem;margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="bowl-icon"></div>
+    <div>
+      <h1>ໂປຣໂມຊັນ ເຊັດເຝີເຮືອ 98,000ກີບ</h1>
+      <div class="sub">ຮ້ານກ້ວຍຕ໋ຽວໄຂ່ຍ້ອນຍຸກ @ Friendship Mall · Combo Set ແຖມນ້ຳເກັກຮວຍ</div>
+    </div>
+    <div class="badge">ມິຖຸນາ 2026</div>
+  </header>
+
+  <div class="cards">
+    <div class="card">
+      <div class="label">ຍອດຂາຍທັງໝົດ</div>
+      <div class="value" id="totalQty">-</div>
+      <div class="note">ເຊັດ</div>
+    </div>
+    <div class="card">
+      <div class="label">ຍອດຂາຍລວມ</div>
+      <div class="value" id="totalSales">-</div>
+      <div class="note">ກີບ</div>
+    </div>
+    <div class="card">
+      <div class="label">ສະເລ່ຍຕໍ່ວັນ</div>
+      <div class="value" id="avgQty">-</div>
+      <div class="note">ເຊັດ/ວັນ (18 ວັນ)</div>
+    </div>
+    <div class="card">
+      <div class="label">ວັນທີ່ມີການຂາຍ</div>
+      <div class="value" id="activeDays">-</div>
+      <div class="note">ຈາກ 18 ວັນ</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>ຈຳນວນເຊັດທີ່ຂາຍຕໍ່ວັນ</h2>
+    <div class="chart-box"><canvas id="usageChart"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <h2>ຍອດຂາຍລວມ ຕໍ່ວັນ (ກີບ)</h2>
+    <div class="chart-box"><canvas id="salesChart"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <h2>ລາຍລະອຽດແຍກຕາມວັນ</h2>
+    <table>
+      <thead>
+        <tr><th>ວັນ (ມິຖຸນາ)</th><th>ຈຳນວນເຊັດ</th><th>ບິນ</th><th>ຍອດຂາຍລວມ</th></tr>
+      </thead>
+      <tbody id="tblBody"></tbody>
+    </table>
+  </div>
+
+  <footer>ສ້າງຈາກໄຟລ໌ Set_98_000ກ_ບ.xlsx · 1–18 ມິຖຸນາ 2026</footer>
+</div>
+
+<script>
+const data = [
+  {day:1,qty:4,total:392000,tx:4},
+  {day:2,qty:1,total:98000,tx:1},
+  {day:3,qty:1,total:98000,tx:1},
+  {day:4,qty:1,total:98000,tx:1},
+  {day:5,qty:1,total:98000,tx:1},
+  {day:6,qty:2,total:196000,tx:2},
+  {day:7,qty:2,total:196000,tx:2},
+  {day:8,qty:0,total:0,tx:0},
+  {day:9,qty:2,total:196000,tx:2},
+  {day:10,qty:0,total:0,tx:0},
+  {day:11,qty:0,total:0,tx:0},
+  {day:12,qty:0,total:0,tx:0},
+  {day:13,qty:3,total:294000,tx:3},
+  {day:14,qty:1,total:98000,tx:1},
+  {day:15,qty:1,total:98000,tx:1},
+  {day:16,qty:9,total:882000,tx:1},
+  {day:17,qty:0,total:0,tx:0},
+  {day:18,qty:1,total:98000,tx:1},
+];
+
+const fmt = n => n.toLocaleString('en-US');
+
+const totalQty = data.reduce((a,d)=>a+d.qty,0);
+document.getElementById('totalQty').textContent = fmt(totalQty);
+document.getElementById('totalSales').textContent = fmt(data.reduce((a,d)=>a+d.total,0));
+document.getElementById('avgQty').textContent = (totalQty/18).toFixed(1);
+document.getElementById('activeDays').textContent = data.filter(d=>d.qty>0).length;
+
+const tbody = document.getElementById('tblBody');
+data.forEach(d=>{
+  const tr = document.createElement('tr');
+  const z = d.qty===0 ? 'zero' : '';
+  const qtyCell = d.qty>=9 ? `<span class="pill spike">${d.qty} ⚡</span>` : (d.qty>0?`<span class="pill">${d.qty}</span>`:'-');
+  tr.innerHTML = `
+    <td>${d.day}</td>
+    <td class="${z}">${qtyCell}</td>
+    <td class="${z}">${d.tx||'-'}</td>
+    <td class="${z}">${d.total? fmt(d.total):'-'}</td>`;
+  tbody.appendChild(tr);
+});
+
+const labels = data.map(d=>d.day);
+const chili = '#C0392B', deep='#962D20', broth='#7A2E1D';
+
+new Chart(document.getElementById('usageChart'), {
+  type:'bar',
+  data:{labels, datasets:[
+    {label:'ຈຳນວນເຊັດ', data:data.map(d=>d.qty), backgroundColor:chili, borderRadius:6, maxBarThickness:34}
+  ]},
+  options:{responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{ y:{beginAtZero:true, ticks:{stepSize:2, color:'#9c7257'}, grid:{color:'#F3E5D9'}},
+             x:{title:{display:true,text:'ວັນ (ມິຖຸນາ)',color:'#9c7257'}, grid:{display:false}, ticks:{color:'#9c7257'}}}
+  }
+});
+
+new Chart(document.getElementById('salesChart'), {
+  type:'line',
+  data:{labels, datasets:[{label:'ຍອດຂາຍລວມ', data:data.map(d=>d.total),
+    borderColor:deep, backgroundColor:'rgba(150,45,32,0.14)', fill:true, tension:.35,
+    pointBackgroundColor:broth, pointRadius:4}]},
+  options:{responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{ y:{beginAtZero:true, ticks:{color:'#9c7257', callback:v=>fmt(v)}, grid:{color:'#F3E5D9'}},
+             x:{title:{display:true,text:'ວັນ (ມິຖຸນາ)',color:'#9c7257'}, grid:{display:false}, ticks:{color:'#9c7257'}}}
+  }
+});
+</script>
+</body>
+</html>
